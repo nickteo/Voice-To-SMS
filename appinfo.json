@@ -1,0 +1,19 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "gyteo92@gmail.com",
+    "longName": "Voice To SMS",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "Voice To SMS",
+    "uuid": "5f8e15dd-acad-4d8b-9f01-1869ef95b57e",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
