@@ -7,7 +7,8 @@ static TextLayer *s_list_message_layer;
 
 // Menu stuff
 static SimpleMenuSection s_menu_sections[1];
-static SimpleMenuItem s_first_menu_items[3];
+static SimpleMenuItem* s_first_menu_items;
+static int numItems;
 
 // Choose the phone number to send back to the phone
 static void menu_select_callback(int index, void *ctx) {
@@ -23,29 +24,28 @@ static void add_to_menu_items(char* name, char* number, int location) {
   };
 }
 
+// Add all menu items
+void add_all_to_menu_items(char** name, char** number, int numTotal) {
+  if (s_first_menu_items != (void*) 0) {
+    free(s_first_menu_items);
+  }
+  s_first_menu_items = (SimpleMenuItem*) malloc(numTotal * sizeof(SimpleMenuItem));
+  for (int i = 0; i < numTotal; i++) {
+    add_to_menu_items((char*) name[i], (char*) number[i], i);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Name; %s Number: %s", name[i], number[i]);
+  }
+  numItems = numTotal;
+  if (!!s_simple_menu_layer) {
+    layer_mark_dirty((Layer*) s_simple_menu_layer);
+  }
+}
+
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(s_main_window);
   GRect window_bounds = layer_get_bounds(window_layer);
 
-  // Although we already defined NUM_FIRST_MENU_ITEMS, you can define
-  // an int as such to easily change the order of menu items later
-  int num_a_items = 3;
-  const char *a[num_a_items];
-  a[0] = "blah";
-  a[1] = "blah blah";
-  a[2] = "blah blah blah";
-  
-  const char *b[num_a_items];
-  b[0] = "777-777-7777";
-  b[1] = "111-111-1111";
-  b[2] = "121-111-1111";
-
-  for (int i = 0; i < num_a_items; i++) {
-    add_to_menu_items((char*) a[i], (char*) b[i], i);
-  }
-
   s_menu_sections[0] = (SimpleMenuSection) {
-    .num_items = num_a_items,
+    .num_items = numItems,
     .items = s_first_menu_items,
   };
 
