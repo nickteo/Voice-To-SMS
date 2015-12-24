@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "menu.h"
 
 #define KEY_PHONE_NUMBER 0
 #define KEY_MESSAGE 1
@@ -11,8 +12,6 @@ static TextLayer *s_output_layer;
 
 // Declare a buffer for the DictationSession
 static char s_last_text[512];
-
-
 
 // Send a message
 static void sendString(int key, char* value) {
@@ -42,6 +41,7 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
     text_layer_set_text(s_output_layer, s_failed_buff);
   }
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // App Message Handlers //////////////////////////////////////////////////////////////////
@@ -76,12 +76,9 @@ static void inbox_dropped_callback(AppMessageResult reason, void *context) {
 
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
+  GRect window_bounds = layer_get_bounds(window_layer);
 
-  const int text_height = 20;
-  const GEdgeInsets text_insets = GEdgeInsets((bounds.size.h - text_height) / 2, 0);
-
-  s_output_layer = text_layer_create(bounds);
+  s_output_layer = text_layer_create(GRect(5, 0, window_bounds.size.w - 5, window_bounds.size.h));
   text_layer_set_text(s_output_layer, initialString);
   text_layer_set_text_alignment(s_output_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_output_layer, GTextOverflowModeWordWrap);
@@ -102,6 +99,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void click_config_provider(void *context) {
+  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
 }
 
