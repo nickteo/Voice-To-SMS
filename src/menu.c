@@ -9,10 +9,6 @@ static TextLayer *s_list_message_layer;
 static SimpleMenuSection s_menu_sections[1];
 static SimpleMenuItem s_first_menu_items[3];
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// Menu Stuf /////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////
-
 // Choose the phone number to send back to the phone
 static void menu_select_callback(int index, void *ctx) {
 
@@ -20,7 +16,11 @@ static void menu_select_callback(int index, void *ctx) {
 
 // Add menu item in location in s_first_menu_items
 static void add_to_menu_items(char* name, char* number, int location) {
-  
+  s_first_menu_items[location] = (SimpleMenuItem) {
+    .title = name,
+    .subtitle = number,
+    .callback = menu_select_callback,
+  };
 }
 
 static void window_load(Window *window) {
@@ -29,25 +29,23 @@ static void window_load(Window *window) {
 
   // Although we already defined NUM_FIRST_MENU_ITEMS, you can define
   // an int as such to easily change the order of menu items later
-  int num_a_items = 0;
+  int num_a_items = 3;
+  const char *a[num_a_items];
+  a[0] = "blah";
+  a[1] = "blah blah";
+  a[2] = "blah blah blah";
+  
+  const char *b[num_a_items];
+  b[0] = "777-777-7777";
+  b[1] = "111-111-1111";
+  b[2] = "121-111-1111";
 
-  s_first_menu_items[num_a_items++] = (SimpleMenuItem) {
-    .title = "First Item",
-    .callback = menu_select_callback,
-  };
-  s_first_menu_items[num_a_items++] = (SimpleMenuItem) {
-    .title = "Second Item",
-    .subtitle = "Here's a subtitle",
-    .callback = menu_select_callback,
-  };
-  s_first_menu_items[num_a_items++] = (SimpleMenuItem) {
-    .title = "Third Item",
-    .subtitle = PBL_IF_RECT_ELSE("This has an icon", "Item number three"),
-    .callback = menu_select_callback,
-  };
+  for (int i = 0; i < num_a_items; i++) {
+    add_to_menu_items((char*) a[i], (char*) b[i], i);
+  }
 
   s_menu_sections[0] = (SimpleMenuSection) {
-    .num_items = 3,
+    .num_items = num_a_items,
     .items = s_first_menu_items,
   };
 
