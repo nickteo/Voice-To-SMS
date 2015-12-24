@@ -16,7 +16,8 @@ static void menu_select_callback(int index, void *ctx) {
 }
 
 // Add menu item in location in s_first_menu_items
-static void add_to_menu_items(char* name, char* number, int location) {
+void add_to_menu_items(char* name, char* number, int location) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "location: %d", location);
   s_first_menu_items[location] = (SimpleMenuItem) {
     .title = name,
     .subtitle = number,
@@ -26,7 +27,7 @@ static void add_to_menu_items(char* name, char* number, int location) {
 
 // Add all menu items
 void add_all_to_menu_items(char** name, char** number, int numTotal) {
-  if (s_first_menu_items != (void*) 0) {
+  if (s_first_menu_items != NULL) {
     free(s_first_menu_items);
   }
   s_first_menu_items = (SimpleMenuItem*) malloc(numTotal * sizeof(SimpleMenuItem));
@@ -35,6 +36,22 @@ void add_all_to_menu_items(char** name, char** number, int numTotal) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Name; %s Number: %s", name[i], number[i]);
   }
   numItems = numTotal;
+  if (!!s_simple_menu_layer) {
+    layer_mark_dirty((Layer*) s_simple_menu_layer);
+  }
+}
+
+// Initialize menu items
+void create_new_menu_list(int numTotal) {
+  if (s_first_menu_items != NULL) {
+    free(s_first_menu_items);
+  }
+  s_first_menu_items = (SimpleMenuItem*) malloc(numTotal * sizeof(SimpleMenuItem));
+  numItems = numTotal;
+}
+
+// Mark layer as dirty
+void mark_dirty() {
   if (!!s_simple_menu_layer) {
     layer_mark_dirty((Layer*) s_simple_menu_layer);
   }

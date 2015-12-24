@@ -3,6 +3,9 @@
 
 #define KEY_PHONE_NUMBER 0
 #define KEY_MESSAGE 1
+#define KEY_NUM_CONTACTS 2
+#define KEY_NEED_CONTACTS 3
+#define KEY_FIRST_CONTACT 100
 
 char* initialString = "Speak your mind!";
   
@@ -58,12 +61,28 @@ static void outbox_failed_callback(DictionaryIterator *iter, AppMessageResult re
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+  int numContacts;
+  int location;
+  char *name;
+  char *phoneNumber;
+  int contactKey;
   // Get the first pair
-  /*Tuple *data = dict_find(iterator, KEY_DATA);
+  Tuple *data = dict_find(iterator, KEY_NUM_CONTACTS);
   if (data) {
-    snprintf(s_buffer, sizeof(s_buffer), "Received '%s'", data->value->cstring);
-    text_layer_set_text(s_output_layer, s_buffer);
-  }*/
+    numContacts =  data -> value -> int32;
+    // Start the new list
+    create_new_menu_list(numContacts);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "numContacts: %d", numContacts);
+    for (int i = 0; i < numContacts; i++) {
+      contactKey = i * 2 + KEY_FIRST_CONTACT;
+      data = dict_find(iterator, contactKey);
+      name = data -> value -> cstring;
+      data = dict_find(iterator, contactKey + 1);
+      phoneNumber = data -> value -> cstring;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Name; %s Number: %s", name, phoneNumber);
+      add_to_menu_items(name, phoneNumber, i);
+    }
+  }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -127,6 +146,9 @@ static void init() {
   app_message_register_outbox_sent(outbox_sent_callback);
   app_message_register_outbox_failed(outbox_failed_callback);
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  
+  // Ask for list of contacts
+  sendString(KEY_NEED_CONTACTS, "");
 }
 
 static void deinit(void) {
