@@ -62,7 +62,6 @@ static void outbox_failed_callback(DictionaryIterator *iter, AppMessageResult re
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   int numContacts;
-  int location;
   char *name;
   char *phoneNumber;
   int contactKey;
@@ -114,6 +113,7 @@ static void main_window_unload(Window *window) {
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Start dictation UI
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Phone number: %s", selectedNumber);
   dictation_session_start(s_dictation_session);
 }
 

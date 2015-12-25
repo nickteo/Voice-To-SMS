@@ -10,9 +10,12 @@ static SimpleMenuSection s_menu_sections[1];
 static SimpleMenuItem* s_first_menu_items;
 static int numItems;
 
+// Selected number. Used in main to send the message
+const char* selectedNumber;
+
 // Choose the phone number to send back to the phone
 static void menu_select_callback(int index, void *ctx) {
-
+  selectedNumber = s_first_menu_items[index].subtitle;
 }
 
 // Add menu item in location in s_first_menu_items

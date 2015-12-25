@@ -8,6 +8,8 @@
     LIST_MESSAGE_WINDOW_NUM_ROWS * LIST_MESSAGE_WINDOW_CELL_HEIGHT
 #define LIST_MESSAGE_WINDOW_HINT_TEXT   "Your list items"
 
+const char* selectedNumber;
+
 void add_all_to_menu_items(char** name, char** number, int numTotal);
 void add_to_menu_items(char* name, char* number, int location);
 void create_new_menu_list(int numTotal);
