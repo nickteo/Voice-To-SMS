@@ -26,6 +26,17 @@ static void sendString(int key, char* value) {
   app_message_outbox_send();
 }
 
+// Send text
+static void sendText(char* number, char* message) {
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  
+  dict_write_cstring(iter, KEY_PHONE_NUMBER, number);
+  dict_write_cstring(iter, KEY_MESSAGE, message);
+  
+  app_message_outbox_send();
+}
+
 // Dictation Callback
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, 
                                        char *transcription, void *context) {
@@ -35,7 +46,7 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
     text_layer_set_text(s_output_layer, s_last_text);
     
     // Send the dictated text to the phone
-    sendString(KEY_MESSAGE, transcription);
+    sendText((char*) selectedNumber, transcription);
   } else {
     // Display the reason for any error
     static char s_failed_buff[128];
@@ -113,7 +124,6 @@ static void main_window_unload(Window *window) {
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Start dictation UI
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Phone number: %s", selectedNumber);
   dictation_session_start(s_dictation_session);
 }
 
@@ -148,7 +158,7 @@ static void init() {
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   
   // Ask for list of contacts
-  sendString(KEY_NEED_CONTACTS, "");
+  //sendString(KEY_NEED_CONTACTS, "");
 }
 
 static void deinit(void) {
