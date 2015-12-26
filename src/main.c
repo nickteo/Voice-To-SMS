@@ -1,41 +1,19 @@
 #include <pebble.h>
 #include "menu.h"
+#include "messaging.h"
+#include "globals.h"
 
-#define KEY_PHONE_NUMBER 0
-#define KEY_MESSAGE 1
-#define KEY_NUM_CONTACTS 2
-#define KEY_NEED_CONTACTS 3
-#define KEY_FIRST_CONTACT 100
-
-char* initialString = "Speak your mind!";
+char* initialString = "Press up to see your favorites then choose a contact\n Press select and speak your mind!";
   
-static DictationSession *s_dictation_session;
 static Window *s_main_window;
 static TextLayer *s_output_layer;
+static int needContactsFlag;
+static int needCreateMenuFlag;
+
+static DictationSession *s_dictation_session;
 
 // Declare a buffer for the DictationSession
 static char s_last_text[512];
-
-// Send a message
-static void sendString(int key, char* value) {
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
-
-  dict_write_cstring(iter, key, value);
-
-  app_message_outbox_send();
-}
-
-// Send text
-static void sendText(char* number, char* message) {
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
-  
-  dict_write_cstring(iter, KEY_PHONE_NUMBER, number);
-  dict_write_cstring(iter, KEY_MESSAGE, message);
-  
-  app_message_outbox_send();
-}
 
 // Dictation Callback
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, 
@@ -55,7 +33,6 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
     text_layer_set_text(s_output_layer, s_failed_buff);
   }
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // App Message Handlers //////////////////////////////////////////////////////////////////
@@ -78,6 +55,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   int contactKey;
   // Get the first pair
   Tuple *data = dict_find(iterator, KEY_NUM_CONTACTS);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Message");
   if (data) {
     numContacts =  data -> value -> int32;
     // Start the new list
@@ -91,6 +69,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       phoneNumber = data -> value -> cstring;
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Name; %s Number: %s", name, phoneNumber);
       add_to_menu_items(name, phoneNumber, i);
+    }
+    if (needCreateMenuFlag) {
+      createMenu();
     }
   }
 }
@@ -107,10 +88,11 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect window_bounds = layer_get_bounds(window_layer);
 
-  s_output_layer = text_layer_create(GRect(5, 0, window_bounds.size.w - 5, window_bounds.size.h));
+  s_output_layer = text_layer_create(GRect(0, 0, window_bounds.size.w, window_bounds.size.h));
   text_layer_set_text(s_output_layer, initialString);
   text_layer_set_text_alignment(s_output_layer, GTextAlignmentCenter);
   text_layer_set_overflow_mode(s_output_layer, GTextOverflowModeWordWrap);
+  //text_layer_set_background_color(s_output_layer, GColorBlue);
   layer_add_child(window_layer, text_layer_get_layer(s_output_layer));
 }
 
@@ -127,9 +109,25 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   dictation_session_start(s_dictation_session);
 }
 
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Ask for list of contacts
+  sendString(KEY_NEED_CONTACTS, "");
+}
+
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (needContactsFlag) {
+    sendString(KEY_NEED_CONTACTS, "");
+    needContactsFlag = 0;
+    needCreateMenuFlag = 1;
+  } else {
+    createMenu();
+  }
+}
+
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +156,8 @@ static void init() {
   app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   
   // Ask for list of contacts
-  //sendString(KEY_NEED_CONTACTS, "");
+  sendString(KEY_NEED_CONTACTS, "");
+  needContactsFlag = 1;
 }
 
 static void deinit(void) {
