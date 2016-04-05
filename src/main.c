@@ -2,37 +2,14 @@
 #include "menu.h"
 #include "messaging.h"
 #include "globals.h"
+#include "dictation.h"
 
-char* initialString = "Press up to see your favorites then choose a contact\n Press select and speak your mind!";
+char* initialString = "Press select to see your favorites, choose a contact, then speak your mind";
   
 static Window *s_main_window;
 static TextLayer *s_output_layer;
 static int needContactsFlag;
 static int needCreateMenuFlag;
-
-static DictationSession *s_dictation_session;
-
-// Declare a buffer for the DictationSession
-static char s_last_text[512];
-
-// Dictation Callback
-static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, 
-                                       char *transcription, void *context) {
-  if(status == DictationSessionStatusSuccess) {
-    // Display the dictated text
-    snprintf(s_last_text, sizeof(s_last_text), "Transcription:\n\n%s", transcription);
-    text_layer_set_text(s_output_layer, s_last_text);
-    
-    // Send the dictated text to the phone
-    sendText((char*) selectedNumber, transcription);
-  } else {
-    // Display the reason for any error
-    static char s_failed_buff[128];
-    snprintf(s_failed_buff, sizeof(s_failed_buff), "Transcription failed.\n\nReason:\n%d", 
-             (int)status);
-    text_layer_set_text(s_output_layer, s_failed_buff);
-  }
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // App Message Handlers //////////////////////////////////////////////////////////////////
@@ -73,6 +50,14 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     if (needCreateMenuFlag) {
       createMenu();
     }
+  } else {
+    // Must have gotten the status of message
+    data = dict_find(iterator, KEY_MESSAGE_STATUS);
+    if (data -> value -> int32 == -1) {
+      vibes_long_pulse();
+    } else {
+      vibes_short_pulse();
+    }
   }
 }
 
@@ -105,16 +90,6 @@ static void main_window_unload(Window *window) {
 //////////////////////////////////////////////////////////////////////////////////////////
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Start dictation UI
-  dictation_session_start(s_dictation_session);
-}
-
-static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Ask for list of contacts
-  sendString(KEY_NEED_CONTACTS, "");
-}
-
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (needContactsFlag) {
     sendString(KEY_NEED_CONTACTS, "");
     needContactsFlag = 0;
@@ -124,8 +99,12 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
 }
 
+static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Ask for list of contacts
+  sendString(KEY_NEED_CONTACTS, "");
+}
+
 static void click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
 }

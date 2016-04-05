@@ -4,6 +4,7 @@
         ""
     ],
     "companyName": "gyteo92@gmail.com",
+    "enableMultiJS": false,
     "longName": "Voice To SMS",
     "projectType": "native",
     "resources": {
